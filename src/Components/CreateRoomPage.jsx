@@ -19,8 +19,7 @@ const CreateRoomPage = () => {
 
   const handleJoinRoom = () => {
     if (roomId) {
-      // Navigate to the code editor page with the room ID
-      navigate(`/editor/${roomId}`);
+      navigate(`/code/editor/${roomId}`);
     } else {
       alert('Please generate a room ID first.');
     }

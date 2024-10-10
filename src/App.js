@@ -1,19 +1,26 @@
 // src/App.jsx
+import './App.css'
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'; 
 import WelcomePage from './Components/WelcomePage'; 
-import CreateRoomPage from './Components/CreateRoomPage'; // Import the new CreateRoomPage component
+import CreateRoomPage from './Components/CreateRoomPage'; 
+import EditorPage from './Components/EditorPage';
+import { ChakraProvider } from '@chakra-ui/react'
 
-import CodeEditor from './Components/CodeEditor';
+
 const App = () => {
   return (
+    <div className='App'>
+    <ChakraProvider>
     <Router>
       <Routes>
         <Route path="/" element={<WelcomePage />} />
-        <Route path="/create-room" element={<CreateRoomPage />} /> {/* New route for CreateRoomPage */}
-        <Route path="/editor/:roomId" element={<CodeEditor/>} /> {/* Placeholder for the room */}
+        <Route path="/create-room" element={<CreateRoomPage />} /> 
+        <Route path="/code/editor/:roomId" element={<EditorPage/>} /> 
       </Routes>
     </Router>
+    </ChakraProvider>
+    </div>
   );
 };
 
