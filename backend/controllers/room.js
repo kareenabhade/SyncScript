@@ -1,48 +1,6 @@
 const Room = require("../models/room");
 const User = require("../models/user");
 
-const createRoom1 = async(req,res)=>{
-    const { roomId, users, sharedCode, adminId } = req.body;
-
-  try {
-    // Validate admin user
-    const admin = await User.findById(adminId);
-
-    if (!admin) {
-      return res.status(404).json({ message: "Admin user not found" });
-    }
-
-    if (admin.role !== "admin") {
-      return res.status(403).json({ message: "Only admins can create a room" });
-    }
-
-    // Validate if roomId already exists
-    const existingRoom = await Room.findOne({ roomId });
-    if (existingRoom) {
-      return res.status(400).json({ message: "Room ID already exists" });
-    }
-
-    // Create a new room
-    const room = new Room({
-      roomId,
-      users, // Array of user IDs
-      sharedCode: sharedCode || { content: "", language: "javascript" },
-    });
-
-    await room.save();
-    res.status(201).json({
-      message: "Room created successfully",
-      room,
-    });
-  } catch (error) {
-    console.error("Error creating room:", error);
-    res.status(500).json({
-      message: "Failed to create room",
-      error: error.message,
-    });
-  }
-}
-
 const createRoom = async (req, res) => {
   const { roomId, adminId } = req.body;
 
@@ -92,8 +50,6 @@ const createRoom = async (req, res) => {
     });
   }
 };
-
-
 
 const joinRoom = async (req, res) => {
   const { roomId, userId } = req.body;
