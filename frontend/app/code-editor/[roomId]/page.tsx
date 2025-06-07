@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Editor from "@monaco-editor/react";
 import { LANGUAGE_VERSIONS, CODE_SNIPPETS } from '@/utils/constants';
 import { Output } from '@/components/output';
+
 
 export default function CodeEditor() {
   const [language, setLanguage] = useState<keyof typeof CODE_SNIPPETS>('javascript');
   const [code, setCode] = useState<string>(CODE_SNIPPETS[language]);
   const editorRef = useRef<any>(null);
+
 
   const handleEditorDidMount = (editor:any) => {
     editorRef.current = editor;

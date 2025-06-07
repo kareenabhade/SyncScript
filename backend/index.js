@@ -6,10 +6,12 @@ const roomPath = require("./routes/room");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
 const Room = require("./models/room");
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 const app = express();
 connectDB();
-
 // Middleware
 app.use(express.json());
 app.use(cors({ origin: 'http://localhost:3000' }));
@@ -27,31 +29,57 @@ const io = new Server(httpServer, {
 
 // Socket.IO Connection Event
 // Socket.IO Events
-// io.on('connection', (socket) => {
-//   console.log('New client connected:', socket.id);
+io.on('connection', (socket) => {
+  console.log('New client connected:', socket.id);
 
-//   // Listen for events
-//   socket.on('create-room', ({ roomId, adminName }) => {
-//     socket.join(roomId);
-//     console.log(`Room created: ${roomId} by ${adminName}`);
-//     io.to(roomId).emit('room-created', { roomId });
-//   });
+  // Handle room joining
+ socket.on('join-room', async ({ roomId, userId }) => {
+  try {
+    const room = await Room.findOne({ roomId }).populate('users', 'name email picture');
+    if (room) {
+      socket.join(roomId);
+      
+      // Emit to all clients in the room
+      io.to(roomId).emit('user-joined', {
+        message: 'New user joined the room',
+        room: room
+      });
+    }
+  } catch (error) {
+    console.error('Error joining room:', error);
+    socket.emit('error', { message: 'Failed to join room' });
+  }
+});
 
-//   socket.on('join-room', ({ roomId, userName }) => {
-//     const room = io.sockets.adapter.rooms.get(roomId);
-//     if (room) {
-//       socket.join(roomId);
-//       io.to(roomId).emit('user-joined', { userName });
-//       console.log(`${userName} joined room: ${roomId}`);
-//     } else {
-//       socket.emit('error', { message: 'Room does not exist.' });
-//     }
-//   });
+  socket.on('leave-room', async ({ roomId, userId }) => {
+  try {
+    // Remove user from room in database
+    const room = await Room.findOneAndUpdate(
+      { roomId },
+      { $pull: { users: userId } },
+      { new: true }
+    ).populate('users', 'name email picture');
 
-//   socket.on('disconnect', () => {
-//     console.log('Client disconnected:', socket.id);
-//   });
-// });
+    console.log("room ", room)
+
+    if (room) {
+      socket.leave(roomId);
+      // Notify others in the room
+      io.to(roomId).emit('user-left', {
+        message: 'A user left the room',
+        room: room
+      });
+    }
+  } catch (error) {
+    console.error('Error handling user leave:', error);
+  }
+  });
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+
+});
 
 // Test Route
 app.get("/", (req, res) => {

@@ -2,13 +2,36 @@
 
 import { Button } from "@/components/ui/button";
 import { AnimatedSection, AnimatedFeature, AnimatedContainer } from "@/components/animated-section";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LoginModal } from '@/components/login-modal';
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { useRoom } from "@/context/RoomContext";
+import Image from "next/image";
 
 export default function Home() {
    const [showModal, setShowModal] = useState(false);
+   const { user } = useAuth();
+   const { currentRoom, setCurrentRoom } = useRoom();
+   const router = useRouter();
+
+   
+  useEffect(() => {
+    localStorage.setItem('currentRoom', JSON.stringify(currentRoom));
+  }, [currentRoom]);
+
+   
+  const handleStartCollaboration = () => {
+    if (user) {
+      router.push('/create-or-join');
+    } else {
+      setShowModal(true);
+    }
+  };
+  
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 relative ">
+     
       <main className="relative flex flex-col items-center justify-center min-h-screen py-12 sm:py-16 px-4">
         <AnimatedContainer>
           <AnimatedSection className="mb-12 sm:mb-16">
@@ -26,9 +49,9 @@ export default function Home() {
 
           <AnimatedSection delay={0.4} className="mb-12 sm:mb-16">
             <Button 
-            onClick={() => setShowModal(true)}
+            onClick={handleStartCollaboration}
             className="font-sans bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 rounded-full transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20 cursor-pointer">
-              Start Collaboration 
+             {user ? 'Continue Collaboration' : 'Start Collaboration'}
             </Button>
           </AnimatedSection>
 

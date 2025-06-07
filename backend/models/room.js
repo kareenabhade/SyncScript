@@ -4,7 +4,11 @@ const roomSchema = new mongoose.Schema({
   roomId: {
     type: String,
     required: true,
-    unique: true, 
+    unique: true,
+  },
+  roomName: {
+    type: String,
+    required: true,
     trim: true,
   },
   users: [

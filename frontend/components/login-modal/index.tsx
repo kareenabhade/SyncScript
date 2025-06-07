@@ -4,13 +4,104 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { motion } from 'framer-motion';
 import { FcGoogle } from 'react-icons/fc';
 import { useState } from 'react';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import { log } from 'console';
 
 export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [name, setName] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
+
+    const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+     
+    if (!validateEmail(email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    setIsLoading(true);
+    
+    if(isSignUp){
+    try {
+      const response = await fetch('http://localhost:5000/api/user/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          name, 
+          email,
+          password,
+          picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random` 
+        }),
+      });
+
+      const data = await response.json();
+
+      console.log("create user response ", data)
+
+      if (!data.success) {
+        throw new Error(data.message);
+      }
+
+      // Store user data
+      login(data.token, data.user);
+      toast.success(data.message);
+      router.push('/create-or-join');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      toast.error(error.message || 'Failed to authenticate');
+    } finally {
+      setIsLoading(false);
+      onClose();
+    }
+    }
+    else{
+       try {
+        console.log("email ", email, " passsword ", password);
+        const response = await fetch("http://localhost:7000/api/user/login",{
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            password
+          }),
+        })
+
+        const data = await response.json();
+        console.log("login response ", data);
+
+        if(data.success){
+          login(data.token, data.user);
+          toast.success(data.message);
+          router.push('/create-or-join');
+        }
+        else{
+          toast.error(data.message);
+        }
+       } catch (error:any) {
+          toast.error(error.message);
+       }
+
+    }
+    setIsLoading(false);
+    onClose();
+ 
+  };
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
@@ -62,7 +153,9 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                   className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               )}
-              <button className="cursor-pointer w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all">
+              <button 
+              onClick={handleSubmit}
+              className="cursor-pointer w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all">
                 {isSignUp ? 'Sign Up' : 'Sign In'}
               </button>
             </div>
@@ -87,7 +180,8 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             <p className="mt-6 text-sm text-gray-400">
               {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
               <button 
-                onClick={() => setIsSignUp(!isSignUp)}
+                onClick={() =>{setIsSignUp(!isSignUp)}
+                }
                 className="cursor-pointer text-purple-500 hover:text-purple-400"
               >
                 {isSignUp ? 'Sign in' : 'Sign up'}

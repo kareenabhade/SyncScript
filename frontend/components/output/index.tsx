@@ -32,10 +32,11 @@ export function Output({ editorRef, language }:OutputProps) {
 
       const result = await executeCode(language as keyof typeof LANGUAGE_VERSIONS, sourceCode);
       const { run, stderr } = result;
+      console.log("result ", stderr);
 
-      if (stderr) {
+      if (result?.compile?.stderr) {
         setIsError(true);
-        setOutput(stderr.split("\n"));
+        setOutput(result?.compile?.stderr.split("\n"));
         toast.error("Compilation Error");
       } else {
         setIsError(false);
